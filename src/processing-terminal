@@ -58,13 +58,14 @@ sub build() {
         system( "rm " . $build_path . "/" . $base_name );
     }
     copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.h", $build_path );
+    copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.c", $build_path );
     copy( $PROCESSING_TERMINAL_DIR . "/core.h",                $build_path );
     copy( $PROCESSING_TERMINAL_DIR . "/core.c",                $build_path );
     my $build_command
         = "g++ -Wall  -Wunused-but-set-variable -g -v"
         . " -o build/"
         . $base_name
-        . " build/core.c"
+        . " build/processing-terminal.c"
         . " build/"
         . $base_name . ".c"
         . " -Wall -lcaca -Wunused-but-set-variable";

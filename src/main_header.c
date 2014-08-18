@@ -1,3 +1,4 @@
+#include "processing-terminal.h"
 /*
     Copyright (c) 2014 by Ralf Baecker <rlfbckr ~AT~ gmail.com>
 
@@ -13,7 +14,9 @@
 
     You should have received a copy of the GNU General Public License
     along with Processing-Terminal.  If not, see
-    <http://www.gnu.org/licenses/>. 
+    <http://www.gnu.org/licenses/>.
 */
 
-#include "processing-terminal.h"
+processingterminal pt;
+int width;
+int height;

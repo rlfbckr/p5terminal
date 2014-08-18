@@ -13,29 +13,63 @@
 
     You should have received a copy of the GNU General Public License
     along with Processing-Terminal.  If not, see
-    <http://www.gnu.org/licenses/>. 
+    <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PROCESSING_TERMINAL_H
-#define PROCESSING_TERMINAL_H
+#ifndef _PROCESSING_TERMINAL_H_
+#define _PROCESSING_TERMINAL_H_
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
 #include <caca.h>
-typedef long color_pt;
-//using color_pt = int ;
 
-int width;
-int height;
+typedef long color_pt; // fake a color type
+
+
+typedef struct {
+    char density[19];
+    int C_stroke_r;
+    int C_stroke_g;
+    int C_stroke_b;
+
+    int C_color;
+    char C_pixel;
+    int PT_running;
+    int PT_paused;
+    int PT_keyblocked;
+
+    int PT_USE_DITHERING;
+
+    int PT_bitmap_width;
+    int PT_bitmap_height;
+    int width;
+    int height;
+
+    char const *const *list;
+    caca_canvas_t *cv;
+    caca_display_t *dp;
+    caca_dither_t *PT_dither;
+    uint32_t PT_buffer[640 * 480];
+
+} processingterminal;
+
+extern int width;
+extern int height;
+extern processingterminal pt;
+
+void processing_terminal();
 int init();
+
+void setup(void);
+void draw(void);
+
 void noLoop();
 void noFill();
 void useDithering();
 void noDithering();
-void setup(void);
-void loop(void);
+
 void rect(int x, int y, int w, int h);
 void size(int w, int h);
 void delay (unsigned int howLong);
@@ -60,35 +94,19 @@ void background(color_pt b);
 float map(float x, float in_min, float in_max, float out_min, float out_max);
 int random(int min, int max);
 int random(int max);
-color_pt color(int r,int g, int b);
+color_pt color(int r, int g, int b);
 color_pt color(int b);
+void setDitherResolution(int width, int height);
 
-
+// libcaca stuff
 #define X_SCALE 1.9 // because terminal chars are not rectengular
-char const *const *list;
-caca_canvas_t *cv;
-caca_display_t *dp;
-caca_dither_t *PT_dither;
+
 
 void list_driver();
 
 
-char density[] = " .',-+:;=o&%/$*W@#";
-int C_stroke_r = 255;
-int C_stroke_g = 255;
-int C_stroke_b = 255;
-int C_color = 0;
-char C_pixel = '.';
-int PT_running = 1;
-int PT_paused = 0;
-int PT_keyblocked = 0;
-void setDitherResolution(int width, int height);
-int PT_USE_DITHERING = 1;
 
-int PT_bitmap_width  = 120;
-int  PT_bitmap_height = 80;
 
-uint32_t PT_buffer[640*480];
 void set_pixel_in_bitmap(int x, int y, int r, int g, int b, int a);
 #endif
 

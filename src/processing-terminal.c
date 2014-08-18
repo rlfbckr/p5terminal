@@ -1,11 +1,28 @@
 #include "processing-terminal.h"
 
+/*
+    Copyright (c) 2014 by Ralf Baecker <rlfbckr ~AT~ gmail.com>
+
+    This file is part of Processing-Terminal.
+
+    A wrapper around libcaca and ncurses to offer an ascii-art version to
+    the processing language
+
+    Processing-Terminal is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Processing-Terminal.  If not, see
+    <http://www.gnu.org/licenses/>.
+*/
 
 void processing_terminal() {
     setup();
 
     int PT_keyblocked_t  = 0;
- 
+
     while (pt.PT_running) {
         PT_keyblocked_t--;
         if (PT_keyblocked_t <= 0) {
@@ -90,11 +107,11 @@ int init() {
         return 1;
     }
     if (!pt.PT_USE_DITHERING) {
-         width = caca_get_canvas_width(pt.cv) / X_SCALE;
-         height = caca_get_canvas_height(pt.cv);
+        width = caca_get_canvas_width(pt.cv) / X_SCALE;
+        height = caca_get_canvas_height(pt.cv);
     } else {
-         width = pt.PT_bitmap_width;
-         height = pt.PT_bitmap_height;
+        width = pt.PT_bitmap_width;
+        height = pt.PT_bitmap_height;
 
     }
     useDithering();
@@ -131,7 +148,7 @@ void set_pixel_in_bitmap(int x, int y, int r, int g, int b, int a) {
 }
 
 void list_driver() {
-   pt.list = caca_get_display_driver_list();
+    pt.list = caca_get_display_driver_list();
 
     int i, cur = 0;
     caca_printf(pt.cv, 2, 1, "Available drivers:");
@@ -324,7 +341,7 @@ void setDitherResolution(int width, int height) {
     pt.PT_bitmap_width = width;
     pt.PT_bitmap_height = height;
     pt.PT_dither = caca_create_dither(32, pt.PT_bitmap_width, pt.PT_bitmap_height, 4 *  pt.PT_bitmap_width,
-                                   0x00ff0000, 0x0000ff00, 0x000000ff, 0x0);
+                                      0x00ff0000, 0x0000ff00, 0x000000ff, 0x0);
 
 }
 
