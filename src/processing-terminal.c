@@ -30,6 +30,7 @@ void processing_terminal() {
         }
         caca_event_t ev;
         //        width = caca_get_canvas_width(cv) / X_SCALE;
+        // frameRate =(float) caca_get_rendertime(pt.dp);
         width = caca_get_canvas_width(pt.cv);
 
         height = caca_get_canvas_height(pt.cv);
@@ -41,10 +42,13 @@ void processing_terminal() {
             height = pt.PT_bitmap_height;
 
         }
+        pt.DITHERED_DRAW = 0;
+        pt.textrenderjoblist_items = 0;
         if (!pt.PT_paused) {
             draw();
         }
-        if (pt.PT_USE_DITHERING) {
+
+        if (pt.PT_USE_DITHERING &&  pt.DITHERED_DRAW) {
             caca_dither_bitmap(caca_get_canvas(pt.dp), 0, 0, caca_get_canvas_width(pt.cv),
                                caca_get_canvas_height(pt.cv), pt.PT_dither, pt.PT_buffer);
         }
@@ -66,6 +70,7 @@ void processing_terminal() {
 
             }
         }
+        render_text_items();
         caca_printf(pt.cv, 0, height - 1, "%d/%d blocked=%d t=%d key=%c", width, height, pt.PT_keyblocked,  PT_keyblocked_t, evc);
         caca_refresh_display(pt.dp);
         //if (PT_USE_DITHERING)  caca_free_dither(PT_dither);
@@ -74,6 +79,8 @@ void processing_terminal() {
     caca_free_display(pt.dp);
     caca_free_canvas(pt.cv);
 }
+
+
 int init() {
 
     printf("init ");
@@ -93,8 +100,7 @@ int init() {
 
     pt.PT_bitmap_width  = 120;
     pt.PT_bitmap_height = 80;
-
-
+    ellipseMode(CENTER);
     pt.cv = caca_create_canvas(0, 0);
     if (!pt.cv) {
         fprintf(stderr, "unable to initialise libcaca\n");
@@ -138,12 +144,14 @@ color_pt color(int b) {
 void set_pixel_in_bitmap(int x, int y, int color) {
     if (x >= 0 && x < pt.PT_bitmap_width && y >= 0 && y < pt.PT_bitmap_height) {
         pt.PT_buffer[y * pt.PT_bitmap_width + x] = color;
+        pt.DITHERED_DRAW = 1;
     }
 }
 
 void set_pixel_in_bitmap(int x, int y, int r, int g, int b, int a) {
     if (x >= 0 && x < pt.PT_bitmap_width && y >= 0 && y < pt.PT_bitmap_height) {
         pt.PT_buffer[y * pt.PT_bitmap_width + x] = (r << 16) | (g << 8) | (b << 0);
+        pt.DITHERED_DRAW = 1;
     }
 }
 
@@ -186,6 +194,35 @@ void noSmooth(void) {
     // dummy
 }
 
+
+void fill(color_pt color) {
+    pt.C_color =  (int) color;
+}
+void fill(float b) {
+    fill((int) b);
+}
+
+void fill(int b) {
+    if (pt.PT_USE_DITHERING) {
+        fill(b, b, b);
+    } else {
+        pt.C_Fpixel = pt.density[(int)map(b, 0, 255, 0, sizeof(pt.density) - 1)];
+
+    }
+}
+
+void fill(int r, int g, int b) {
+    pt.C_Fcolor = (r << 16) | (g << 8) | (b << 0);
+    pt.C_Fstroke_r = r;
+    pt.C_Fstroke_g = g;
+    pt.C_Fstroke_b = b;
+}
+void noStroke() {
+
+}
+void frameRate_pt(int rate) {
+
+}
 void stroke(color_pt color) {
     pt.C_color =  (int) color;
 }
@@ -201,7 +238,6 @@ void stroke(int b) {
 
     }
 }
-
 
 void stroke(int r, int g, int b) {
     pt.C_color = (r << 16) | (g << 8) | (b << 0);
@@ -257,8 +293,25 @@ int random(int min, int max) {
     return (rand() % (max - min)) + min;
 }
 void text(int a, int x, int y) {
-    caca_printf(pt.cv, x * X_SCALE, y, "%d", a);
+    textrenderjob_pt newtext;
+    newtext.value_int = a;
+    newtext.x = x;
+    newtext.y = y;
+    newtext.type = TEXT_INT;
+
+    pt.textrenderjoblist[pt.textrenderjoblist_items] = newtext;
+    pt.textrenderjoblist_items++;
+    //    caca_printf(pt.cv, x * X_SCALE, y, "%d", a);
 }
+
+void render_text_items() {
+    for (int i = 0; i < pt.textrenderjoblist_items; i++) {
+        if (pt.textrenderjoblist[i].type == TEXT_INT) {
+            caca_printf(pt.cv, pt.textrenderjoblist[i].x * X_SCALE, pt.textrenderjoblist[i].y, "%d", pt.textrenderjoblist[i].value_int);
+        }
+    }
+}
+
 void rect(int x, int y, int w, int h) {
     if (!pt.PT_USE_DITHERING) {
         x = x * X_SCALE;
@@ -274,28 +327,68 @@ void rect(int x, int y, int w, int h) {
 
 
 void point(int x, int y) {
-    //  mvprintw(y, x,  "*");
-    //        caca_putchar(cv,x,y,'.'):
-    //    caca_putstr(cv, x, y*y_spead, ".");
     if (!pt.PT_USE_DITHERING) {
         caca_printf(pt.cv, x * X_SCALE, y, "%c", pt.C_pixel);
     } else {
-        //x =   map(x, 0, width, 0, PT_bitmap_width);
-        // y =   /map(y, 0, height, 0, PT_bitmap_height);
+
         set_pixel_in_bitmap(x, y, pt.C_color);
     }
 }
+
+
+void ellipseMode(int mode) {
+    pt.ellipsemode = mode;
+}
+
+void ellipse (int x0, int y0, int width, int height) {
+    if (pt.ellipsemode == CENTER) {
+        width = width / 2;
+        height = height / 2;
+    } else if (pt.ellipsemode == CORNER) {
+        width = width / 2;
+        height = height / 2;
+        x0 = x0 + (width);
+        y0 = y0 + (height);
+    }
+
+    int a2 = width * width;
+    int b2 = height * height;
+    int fa2 = 4 * a2, fb2 = 4 * b2;
+
+    int  x, y, sigma;
+
+    /* first half */
+    for (x = 0, y = height, sigma = 2 * b2 + a2 * (1 - 2 * height); b2 * x <= a2 * y; x++) {
+        set_pixel_in_bitmap (x0 + x, y0 + y, pt.C_color);
+        set_pixel_in_bitmap (x0 - x, y0 + y, pt.C_color);
+        set_pixel_in_bitmap (x0 + x, y0 - y, pt.C_color);
+        set_pixel_in_bitmap (x0 - x, y0 - y, pt.C_color);
+        if (sigma >= 0) {
+            sigma += fa2 * (1 - y);
+            y--;
+        }
+        sigma += b2 * ((4 * x) + 6);
+    }
+
+    /* second half */
+    for (x = width, y = 0, sigma = 2 * a2 + b2 * (1 - 2 * width); a2 * y <= b2 * x; y++) {
+        set_pixel_in_bitmap (x0 + x, y0 + y, pt.C_color);
+        set_pixel_in_bitmap (x0 - x, y0 + y, pt.C_color);
+        set_pixel_in_bitmap (x0 + x, y0 - y, pt.C_color);
+        set_pixel_in_bitmap (x0 - x, y0 - y, pt.C_color);
+        if (sigma >= 0) {
+            sigma += fb2 * (1 - x);
+            x--;
+        }
+        sigma += a2 * ((4 * y) + 6);
+    }
+}
+
 void line(int x0, int y0, int x1, int y1) {
     if (!pt.PT_USE_DITHERING) {
         caca_draw_line(pt.cv, x0 * X_SCALE, y0, x1 * X_SCALE, y1, pt.C_pixel);
     } else {
-        /*
-        x0 = map(x0, 0, width, 0, PT_bitmap_width);
-        x1 = map(x1, 0, width, 0, PT_bitmap_width);
-        y0 = map(y0, 0, width, 0, PT_bitmap_width);
-        y1 = map(y1, 0, width, 0, PT_bitmap_width);
-        */
-        //println("line $x0 $y0 $x1 $y1");
+
         int dx = abs( x1 - x0 );
         int dy = abs( y1 - y0 );
         int sx = 0;
@@ -313,7 +406,6 @@ void line(int x0, int y0, int x1, int y1) {
         int err = ( dx - dy );
 
         while (1) {
-            // point( x0, y0);
             set_pixel_in_bitmap(x0, y0, pt.C_color);
             if ( x0 == x1 && y0 == y1 ) {
                 break;
@@ -336,9 +428,11 @@ void line(int x0, int y0, int x1, int y1) {
 
     }
 }
+void  colorMode(int mode, int a, int b, int c) {
 
+}
 void setDitherResolution(int width, int height) {
-    pt.PT_bitmap_width = width;
+    pt.PT_bitmap_width = width / X_SCALE;
     pt.PT_bitmap_height = height;
     pt.PT_dither = caca_create_dither(32, pt.PT_bitmap_width, pt.PT_bitmap_height, 4 *  pt.PT_bitmap_width,
                                       0x00ff0000, 0x0000ff00, 0x000000ff, 0x0);
@@ -362,10 +456,6 @@ void noLoop() {
 
 }
 color_pt lerpColor(color_pt c1, color_pt c2, float amt) {
-    //    int c1 = (int) cp1;
-    //    int c2 = (int) cp2;
-    // int c1 = (int) color(0,255,0);
-    //  int c2 = (int) color(0,0,255);
     if (amt < 0) amt = 0;
     if (amt > 1) amt = 1;
 
@@ -378,19 +468,13 @@ color_pt lerpColor(color_pt c1, color_pt c2, float amt) {
     float r2 = (c2 >> 16) & 0xff;
     float g2 = (c2 >> 8) & 0xff;
     float b2 = c2 & 0xff;
-    /*
-        int ret = (((int) (a1 + (a2 - a1) * amt) << 24) |
-                   ((int) (r1 + (r2 - r1) * amt) << 16) |
-                   ((int) (g1 + (g2 - g1) * amt) << 8) |
-                   ((int) (b1 + (b2 - b1) * amt)));
-
-     */
-    int ret = (
-                  ((int) (r1 + (r2 - r1) * amt) << 16) |
-                  ((int) (g1 + (g2 - g1) * amt) << 8) |
-                  ((int) (b1 + (b2 - b1) * amt))
-              );
-
+    int ret = (((int) (a1 + (a2 - a1) * amt) << 24) |
+               ((int) (r1 + (r2 - r1) * amt) << 16) |
+               ((int) (g1 + (g2 - g1) * amt) << 8) |
+               ((int) (b1 + (b2 - b1) * amt)));
     return (long long) ret;
 }
 
+color_pt lerpColor(color_pt c1, color_pt c2, float amt, int mode) {
+    return lerpColor( c1,  c2,  amt);
+}

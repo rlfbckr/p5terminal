@@ -69,7 +69,6 @@ sub build() {
         . " -Wall -lcaca -Wunused-but-set-variable";
     print $build_command. "\n";
     system($build_command );
-
     system( "build/" . $base_name );
     system("stty sane");
 
@@ -125,6 +124,7 @@ sub precompile_fix_color_defs {
     my $linenr = 0;
     foreach my $line (@lines) {
         $line =~ s/color\ /color_pt\ /g;
+        $line =~ s/frameRate\(/frameRate_pt\(/g;
         $precode .= $line . "\n";
         #print("$linenr  $line\n");
         $linenr++;
@@ -139,7 +139,7 @@ sub precompile_fix_function_declarations {
     my @lines = split /\n/, $code;
     my $linenr = 0;
     foreach my $line (@lines) {
-        if ($line =~ /^(\ |\t)*(int|float|void|color|boolean){1}(\ |\t)*(\w+)\(.*?\).*?$/) {
+        if ($line =~ /^(\ |\t)*(int|float|void|color|boolean){1}(\ |\t)+(\w+)\(.*?\).*?$/) {
             if ($4 ne "draw" && $4 ne "setup") {
                 print("ll: $linenr  $line\n");
                 $line =~ /^(.*?)(\{){0,1}$/;

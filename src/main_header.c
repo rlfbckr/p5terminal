@@ -20,3 +20,5 @@
 processingterminal pt;
 int width;
 int height;
+float frameRate;
+
