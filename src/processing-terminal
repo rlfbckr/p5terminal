@@ -1,8 +1,26 @@
 #!/usr/bin/perl
+
+#    Copyright (c) 2014 by Ralf Baecker <rlfbckr ~AT~ gmail.com>
+#
+#    This file is part of Processing-Terminal.
+#
+#    A wrapper around libcaca and ncurses to offer an ascii-art version to
+#    the processing language
+#
+#    Processing-Terminal is distributed in the hope that it will be
+#    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Processing-Terminal.  If not, see
+#    <http://www.gnu.org/licenses/>. 
+
+
 use File::Slurp;
 use File::Copy;
 
-my $PROCESSING_TERMINAL_DIR = "/home/ralf/projekte/processing-terminal/src";
+my $PROCESSING_TERMINAL_DIR = "/home/ralf/projekte/processing-terminal/src"; # change this to the location of your library
 
 my $pde_file = $ARGV[0];
 if ( $pde_file eq "" ) {
@@ -28,7 +46,11 @@ my $c_code          = gen_c_code($precompile_code);
 build( $c_code, $build_path, $base_name );
 exit 0;
 
-#############################################################################################
+
+#
+#  Functions
+#
+
 sub build() {
     my ( $c_code, $build_path, $base_name ) = @_;
     write_file( $build_path . "/" . $base_name . ".c", $c_code );
