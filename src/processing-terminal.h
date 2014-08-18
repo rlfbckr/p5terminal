@@ -24,18 +24,20 @@
 #include <math.h>
 #include <string.h>
 #include <caca.h>
+#include <sys/time.h>
 
 typedef long color_pt; // fake a color type
 
 
 typedef struct {
-	int type;
-	int value_int;
-	float value_float;
-	int x;
-	int y;
-	int bg;
-	int fg;
+    int type;
+    int value_int;
+    float value_float;
+    unsigned int value_u_int;
+    int x;
+    int y;
+    int bg;
+    int fg;
 } textrenderjob_pt;
 
 
@@ -53,7 +55,7 @@ typedef struct {
     char C_Fpixel;
 
     char C_pixel;
-   	int no_stroke;
+    int no_stroke;
     int PT_running;
     int PT_paused;
     int PT_keyblocked;
@@ -78,7 +80,7 @@ typedef struct {
 
 extern int width;
 extern int height;
-extern float frameRate;
+extern double  frameRate;
 extern processingterminal pt;
 
 void processing_terminal();
@@ -113,6 +115,8 @@ void fill(int r, int g, int b);
 void noSmooth(void);
 void translate(int x, int y);
 void text(int a, int x, int y);
+void text(double a, int x, int y);
+void text(unsigned int a, int x, int y);
 void point(int x, int y);
 void line(int x0, int y0, int x1, int y1);
 void rect(int x, int y, int w, int h);
@@ -140,6 +144,7 @@ void setDitherResolution(int width, int height);
 #define TEXT_INT 0
 #define TEXT_FLOAT 1
 #define TEXT_STRING 2
+#define TEXT_U_INT 3
 
 #define HSB 0
 
@@ -148,7 +153,8 @@ void ellipseMode(int mode);
 void list_driver();
 
 
-
+unsigned int millis (void);
+static void initialiseEpoch (void);
 
 void set_pixel_in_bitmap(int x, int y, int r, int g, int b, int a);
 #endif

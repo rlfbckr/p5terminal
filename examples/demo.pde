@@ -25,7 +25,7 @@ void draw() {
     line_pos++;
     line_pos = line_pos % width;
 
-    delay(20);
+    //delay(10);
 }
 
 

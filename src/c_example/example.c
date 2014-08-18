@@ -17,9 +17,7 @@
     <http://www.gnu.org/licenses/>.
 */
 
-processingterminal pt;
-int width;
-int height;
+
 
 void setup() {
     size(80,20);
@@ -30,6 +28,7 @@ void draw() {
 	background(255,0,0);
     stroke(255);
     line(0, 0, width, height);
+    text(frameRate,0,0);
 }
 int main(int argc, char **argv) {
     if (init()) {

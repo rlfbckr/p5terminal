@@ -17,8 +17,3 @@
     <http://www.gnu.org/licenses/>.
 */
 
-processingterminal pt;
-int width;
-int height;
-float frameRate;
-

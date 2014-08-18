@@ -17,6 +17,15 @@
     along with Processing-Terminal.  If not, see
     <http://www.gnu.org/licenses/>.
 */
+processingterminal pt;
+int width;
+int height;
+double frameRate;
+// Time for easy calculations
+
+static uint64_t epochMilli, epochMicro ;
+long last_frame_millis;
+long this_frame_millis;
 
 void processing_terminal() {
     setup();
@@ -24,6 +33,7 @@ void processing_terminal() {
     int PT_keyblocked_t  = 0;
 
     while (pt.PT_running) {
+
         PT_keyblocked_t--;
         if (PT_keyblocked_t <= 0) {
             pt.PT_keyblocked = 0;
@@ -71,7 +81,13 @@ void processing_terminal() {
             }
         }
         render_text_items();
-        caca_printf(pt.cv, 0, height - 1, "%d/%d blocked=%d t=%d key=%c", width, height, pt.PT_keyblocked,  PT_keyblocked_t, evc);
+        last_frame_millis = this_frame_millis;
+        this_frame_millis = millis();
+        long duration =  (this_frame_millis - last_frame_millis);
+        if (duration > 0) {
+            frameRate = (frameRate*0.99) + ((1000 / duration)*0.01); //(1000 / duration);
+        }
+        caca_printf(pt.cv, 0, height - 1, "%d/%d blocked=%d t=%d key=%c fps = %f", width, height, pt.PT_keyblocked,  PT_keyblocked_t,frameRate, evc);
         caca_refresh_display(pt.dp);
         //if (PT_USE_DITHERING)  caca_free_dither(PT_dither);
 
@@ -82,6 +98,7 @@ void processing_terminal() {
 
 
 int init() {
+    initialiseEpoch () ;
 
     printf("init ");
     sprintf(pt.density, " .',-+:;=o&%%/$*W@#");
@@ -292,6 +309,16 @@ int random(int max) {
 int random(int min, int max) {
     return (rand() % (max - min)) + min;
 }
+void text(unsigned int a, int x, int y) {
+    textrenderjob_pt newtext;
+    newtext.value_u_int = a;
+    newtext.x = x;
+    newtext.y = y;
+    newtext.type = TEXT_U_INT;
+
+    pt.textrenderjoblist[pt.textrenderjoblist_items] = newtext;
+    pt.textrenderjoblist_items++;
+}
 void text(int a, int x, int y) {
     textrenderjob_pt newtext;
     newtext.value_int = a;
@@ -304,10 +331,28 @@ void text(int a, int x, int y) {
     //    caca_printf(pt.cv, x * X_SCALE, y, "%d", a);
 }
 
+void text(double a, int x, int y) {
+    textrenderjob_pt newtext;
+    newtext.value_float = a;
+    newtext.x = x;
+    newtext.y = y;
+    newtext.type = TEXT_FLOAT;
+
+    pt.textrenderjoblist[pt.textrenderjoblist_items] = newtext;
+    pt.textrenderjoblist_items++;
+    //    caca_printf(pt.cv, x * X_SCALE, y, "%d", a);
+}
+
 void render_text_items() {
     for (int i = 0; i < pt.textrenderjoblist_items; i++) {
         if (pt.textrenderjoblist[i].type == TEXT_INT) {
             caca_printf(pt.cv, pt.textrenderjoblist[i].x * X_SCALE, pt.textrenderjoblist[i].y, "%d", pt.textrenderjoblist[i].value_int);
+        }
+        if (pt.textrenderjoblist[i].type == TEXT_FLOAT) {
+            caca_printf(pt.cv, pt.textrenderjoblist[i].x * X_SCALE, pt.textrenderjoblist[i].y, "%f", pt.textrenderjoblist[i].value_float);
+        }
+        if (pt.textrenderjoblist[i].type == TEXT_U_INT) {
+            caca_printf(pt.cv, pt.textrenderjoblist[i].x * X_SCALE, pt.textrenderjoblist[i].y, "%d", pt.textrenderjoblist[i].value_u_int);
         }
     }
 }
@@ -477,4 +522,22 @@ color_pt lerpColor(color_pt c1, color_pt c2, float amt) {
 
 color_pt lerpColor(color_pt c1, color_pt c2, float amt, int mode) {
     return lerpColor( c1,  c2,  amt);
+}
+
+
+unsigned int millis (void) {
+    struct timeval tv ;
+    uint64_t now ;
+
+    gettimeofday (&tv, NULL) ;
+    now  = (uint64_t)tv.tv_sec * (uint64_t)1000 + (uint64_t)(tv.tv_usec / 1000) ;
+
+    return (uint32_t)(now - epochMilli) ;
+}
+static void initialiseEpoch (void) {
+    struct timeval tv ;
+
+    gettimeofday (&tv, NULL) ;
+    epochMilli = (uint64_t)tv.tv_sec * (uint64_t)1000    + (uint64_t)(tv.tv_usec / 1000) ;
+    epochMicro = (uint64_t)tv.tv_sec * (uint64_t)1000000 + (uint64_t)(tv.tv_usec) ;
 }
