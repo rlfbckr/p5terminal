@@ -59,8 +59,6 @@ sub build() {
     }
     copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.h", $build_path );
     copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.c", $build_path );
-    copy( $PROCESSING_TERMINAL_DIR . "/core.h",                $build_path );
-    copy( $PROCESSING_TERMINAL_DIR . "/core.c",                $build_path );
     my $build_command
         = "g++ -Wall  -Wunused-but-set-variable -g -v"
         . " -o build/"
