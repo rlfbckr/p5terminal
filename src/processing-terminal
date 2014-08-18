@@ -1,0 +1,170 @@
+#!/usr/bin/perl
+use File::Slurp;
+use File::Copy;
+
+my $PROCESSING_TERMINAL_DIR = "/home/ralf/projekte/processing-terminal/src";
+
+my $pde_file = $ARGV[0];
+if ( $pde_file eq "" ) {
+    print "no pde file given\n";
+    exit 0;
+}
+
+my $base_name    = get_base_name($pde_file);
+my $current_path = get_current_path();
+my $build_path   = get_build_dir($current_path);
+
+print("processing-terminal\n");
+print("  pde_file       $pde_file\n");
+print("  base_name      $base_name\n");
+print("  current_path   $current_path\n");
+print("  build_path     $build_path\n");
+print("  PT_DIR         $PROCESSING_TERMINAL_DIR\n");
+print("\n");
+
+my $processing_code = read_file($pde_file);
+my $precompile_code = precompile($processing_code);
+my $c_code          = gen_c_code($precompile_code);
+build( $c_code, $build_path, $base_name );
+exit 0;
+
+#############################################################################################
+sub build() {
+    my ( $c_code, $build_path, $base_name ) = @_;
+    write_file( $build_path . "/" . $base_name . ".c", $c_code );
+    if ( -e $build_path . "/" . $base_name ) {
+        system( "rm " . $build_path . "/" . $base_name );
+    }
+    copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.h", $build_path );
+    copy( $PROCESSING_TERMINAL_DIR . "/core.h",                $build_path );
+    copy( $PROCESSING_TERMINAL_DIR . "/core.c",                $build_path );
+    my $build_command
+        = "g++ -Wall  -Wunused-but-set-variable -g -v"
+        . " -o build/"
+        . $base_name
+        . " build/core.c"
+        . " build/"
+        . $base_name . ".c"
+        . " -Wall -lcaca -Wunused-but-set-variable";
+    print $build_command. "\n";
+    system($build_command );
+
+    system( "build/" . $base_name );
+    system("stty sane");
+
+#
+# avr-g++ -c -g -Os -Wall -fno-exceptions -ffunction-sections -fdata-sections -mmcu=atmega328p -DF_CPU=16000000L -MMD -DUSB_VID=null -DUSB_PID=null -DARDUINO=105 -D__PROG_TYPES_COMPAT__ -I/usr/share/arduino/hardware/arduino/cores/arduino -I/usr/share/arduino/hardware/arduino/variants/standard /tmp/build2610015216406659339.tmp/sketch_aug15a.cpp -o /tmp/build2610015216406659339.tmp/sketch_aug15a.cpp.o
+#
+#
+#    system(   "g++  build/"
+#            . $base_name
+#            . ".c -o build/"
+#            . $base_name
+#            . " -lcaca -lpthread -Wall -Wunused-but-set-variable" );
+
+}
+
+sub gen_c_code() {
+    my ($pde_code) = @_;
+
+    my $code = read_file( $PROCESSING_TERMINAL_DIR . "/main_header.c" );
+    $code .= "\n";
+    $code .= "\n";
+    $code .= $pde_code;
+    $code .= read_file( $PROCESSING_TERMINAL_DIR . "/main.c" );
+
+    return $code;
+}
+
+sub precompile_fix_setup {
+    my ($code) = @_;
+    my $precode = "";
+
+    # check if code has void setup() {}
+    if ( $code =~ /void.*?setup\(\)/ ) {
+        print("setup functiopn found\n");
+        $precode = $code;
+    }
+    else {
+        print("setup functiopn NOT found\n");
+        $precode .= "void setup() { }\n\n";
+        $precode .= "void draw() {\n";
+        $precode .= $code;
+        $precode .= "\n}\n\n";
+    }
+
+    return $precode;
+}
+
+sub precompile_fix_color_defs {
+    my ($code) = @_;
+    my $precode = "";
+
+    my @lines = split /\n/, $code;
+    my $linenr = 0;
+    foreach my $line (@lines) {
+        $line =~ s/color\ /color_pt\ /g;
+        $precode .= $line . "\n";
+        #print("$linenr  $line\n");
+        $linenr++;
+    }
+    return $precode;
+}
+
+sub precompile_fix_function_declarations {
+    my ($code) = @_;
+    my $precode = "";
+
+    my @lines = split /\n/, $code;
+    my $linenr = 0;
+    foreach my $line (@lines) {
+        if ($line =~ /^(\ |\t)*(int|float|void|color|boolean){1}(\ |\t)*(\w+)\(.*?\).*?$/) {
+            if ($4 ne "draw" && $4 ne "setup") {
+                print("ll: $linenr  $line\n");
+                $line =~ /^(.*?)(\{){0,1}$/;
+                my $function = $1.";";
+                $precode.=$function."\n";
+                print("------->". $function."\n");
+            }
+        }
+       
+        $linenr++;
+    }
+    $precode = $precode."\n".$code;
+    print $precode;
+    return $precode;
+}
+
+
+sub precompile {
+    my ($code) = @_;
+    $code = precompile_fix_setup($code);
+    $code = precompile_fix_function_declarations($code);
+    $precode = precompile_fix_color_defs($code);
+    return $precode;
+}
+
+sub get_build_dir {
+    my ($current_path) = @_;
+    my $build_path = $current_path . "/build";
+    if ( !( -d "$build_path" ) ) {
+        system("mkdir $build_path");
+    }
+    return $build_path;
+}
+
+sub get_base_name {
+    my ($f) = @_;
+    $f =~ s/\.pde$//;
+    return $f;
+}
+
+sub get_current_path() {
+    my $pwd = `pwd`;
+    chomp($pwd);
+    if ( $pwd eq "" | $pwd eq "/" ) {
+        println("evil path\n");
+        return 0;
+    }
+    return $pwd;
+}
