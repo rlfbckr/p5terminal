@@ -51,4 +51,4 @@ The Perl-Script **processing-terminal** does the following:
 
 An example build command looks like this
 
-    g++ -Wall  -Wunused-but-set-variable -g  -o build/demo build/processing-terminal.c build/demo.c -Wall -lcaca -lpthread -Wunused-but-set-variable
+    g++ -Wall -g  -o build/demo build/processing-terminal.c build/demo.c -Wall -lcaca -lpthread
