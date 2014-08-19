@@ -103,11 +103,11 @@ sub precompile_fix_setup {
 
     # check if code has void setup() {}
     if ( $code =~ /void.*?setup\(\)/ ) {
-        print("setup functiopn found\n");
+        print("setup function found\n");
         $precode = $code;
     }
     else {
-        print("setup functiopn NOT found\n");
+        print("setup functionn NOT found\n");
         $precode .= "void setup() { }\n\n";
         $precode .= "void draw() {\n";
         $precode .= $code;

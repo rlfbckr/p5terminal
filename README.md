@@ -14,6 +14,7 @@ Installing requirements on Ubuntu/Debian:
 
     sudo apt-get install libfile-slurp-perl libcaca0 libcaca-dev git ncurses
 
+
 ###Installation
 Get Processing-Terminal from Github
 
@@ -21,14 +22,14 @@ Get Processing-Terminal from Github
 
 Add processing-terminal to your PATH or add an alias in **.bashrc**
 
-
     alias processing-terminal="/path/to/processing-terminal/src"      
    
+
 ### How it works
 Processing-Terminal consists of two parts:
 
 1.  C/C++ framework that mimics the Processing-core functions (e.g. draw(), line(), rect(), map())
-2.  A Perl-Script that builds and runs the processing-code
+2.  A Perl-Script that builds and runs the processing-code (similar to Arduino)
 
 The Perl-Script **processing-terminal** does the following:
 
