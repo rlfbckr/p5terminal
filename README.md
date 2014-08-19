@@ -5,12 +5,14 @@ A Terminal (ASCII Art) [Processing](http://processing.org/) Interpreter.
 
 ### Requirements
 Tested on Linux (Ubuntu/Debian based distributions). Mac OS X and Windows (Cygwin/MINGW) should be possible.
-- LibCaca
+
+- libCaca/ncurses
 - Perl (File::Slup and File::copy Modules)
 - GNU C++ Compiler
+
 Installing requirements on Ubuntu/Debian:
 
-    sudo apt-get install libfile-slurp-perl libcaca0 libcaca-dev git
+    sudo apt-get install libfile-slurp-perl libcaca0 libcaca-dev git ncurses
 
 ###Installation
 Get Processing-Terminal from Github
