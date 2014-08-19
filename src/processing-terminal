@@ -19,8 +19,9 @@
 
 use File::Slurp;
 use File::Copy;
+use File::Basename;
 
-my $PROCESSING_TERMINAL_DIR = "/home/ralf/projekte/processing-terminal/src"; # change this to the location of your library
+my $PROCESSING_TERMINAL_DIR = dirname(__FILE__);
 
 my $pde_file = $ARGV[0];
 if ( $pde_file eq "" ) {
