@@ -5,7 +5,6 @@ void setup() {
 
 void draw() {
     text(100, 0, 0);
-
     background(255);
     stroke(255, 0, 0);
     line(2, 2, 12, 12);
@@ -25,7 +24,7 @@ void draw() {
     line_pos++;
     line_pos = line_pos % width;
 
-    //delay(10);
+    //delay(40);
 }
 
 

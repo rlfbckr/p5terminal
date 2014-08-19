@@ -24,7 +24,10 @@
 #include <math.h>
 #include <string.h>
 #include <caca.h>
+#include <pthread.h>
 #include <sys/time.h>
+#include <termios.h>
+#include <unistd.h>   // for read()
 
 typedef long color_pt; // fake a color type
 
@@ -56,7 +59,7 @@ typedef struct {
 
     char C_pixel;
     int no_stroke;
-    int PT_running;
+    int running;
     int PT_paused;
     int PT_keyblocked;
 
@@ -77,6 +80,7 @@ typedef struct {
     int textrenderjoblist_items;
 
 } processingterminal;
+
 
 extern int width;
 extern int height;
@@ -154,9 +158,16 @@ void list_driver();
 
 
 unsigned int millis (void);
-static void initialiseEpoch (void);
+static void initMillis (void);
 
 void set_pixel_in_bitmap(int x, int y, int r, int g, int b, int a);
+
+
+void initKeyboard(void);
+void closeKeyboard(void);
+int kbhit(void);
+int readch(void);
+
 #endif
 
 

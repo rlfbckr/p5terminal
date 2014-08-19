@@ -17,33 +17,42 @@
     along with Processing-Terminal.  If not, see
     <http://www.gnu.org/licenses/>.
 */
+
 processingterminal pt;
 int width;
 int height;
 double frameRate;
-// Time for easy calculations
+char key;
 
-static uint64_t epochMilli, epochMicro ;
-long last_frame_millis;
-long this_frame_millis;
+// for millis
+static uint64_t pt_epochMilli, pt_epochMicro ;
 
-void processing_terminal() {
-    setup();
 
-    int PT_keyblocked_t  = 0;
-
-    while (pt.PT_running) {
-
-        PT_keyblocked_t--;
-        if (PT_keyblocked_t <= 0) {
-            pt.PT_keyblocked = 0;
+// kbhit
+static struct termios initial_settings, new_settings;
+static int peek_character = -1;
+void *keyboard_thread(void *) {
+    while (1) {
+        key = readch();
+        if (key == 27) {
+            pt.running = 0;
         }
-        caca_event_t ev;
-        //        width = caca_get_canvas_width(cv) / X_SCALE;
-        // frameRate =(float) caca_get_rendertime(pt.dp);
-        width = caca_get_canvas_width(pt.cv);
+        if (key == 32) {
+            pt.PT_paused = !pt.PT_paused;
+        }
 
-        height = caca_get_canvas_height(pt.cv);
+    }
+    return NULL;
+
+}
+void processing_terminal() {
+
+    setup();
+    while (pt.running) {
+
+        //width = caca_get_canvas_width(pt.cv);
+        // height = caca_get_canvas_height(pt.cv);
+
         if (!pt.PT_USE_DITHERING) {
             width = caca_get_canvas_width(pt.cv) / X_SCALE;
             height = caca_get_canvas_height(pt.cv);
@@ -62,43 +71,33 @@ void processing_terminal() {
             caca_dither_bitmap(caca_get_canvas(pt.dp), 0, 0, caca_get_canvas_width(pt.cv),
                                caca_get_canvas_height(pt.cv), pt.PT_dither, pt.PT_buffer);
         }
-        char evc = 'Z';
-        while (caca_get_event(pt.dp, CACA_EVENT_ANY, &ev, 0)) {
-            evc = caca_get_event_key_ch(&ev);
-            if (!pt.PT_keyblocked) {
-                //if ((caca_get_event_type(&ev) & CACA_EVENT_KEY_PRESS)) {
-                //    PT_running = 0;
-                //}
-
-                if (evc == CACA_KEY_ESCAPE) {
-                    pt.PT_running = 0;
-                } else if (evc == ' ') {
-                    pt.PT_paused = !pt.PT_paused;
-                    pt.PT_keyblocked = 1;
-                    PT_keyblocked_t = 100;
-                }
-
-            }
-        }
         render_text_items();
+        /*
         last_frame_millis = this_frame_millis;
         this_frame_millis = millis();
         long duration =  (this_frame_millis - last_frame_millis);
+        */
+        int duration = caca_get_display_time(pt.dp);
         if (duration > 0) {
-            frameRate = (frameRate*0.99) + ((1000 / duration)*0.01); //(1000 / duration);
+            frameRate = (frameRate * 0.9) + ((1000000 / duration) * 0.1); //(1000 / duration);
         }
-        caca_printf(pt.cv, 0, height - 1, "%d/%d blocked=%d t=%d key=%c fps = %f", width, height, pt.PT_keyblocked,  PT_keyblocked_t,frameRate, evc);
+        caca_printf(pt.cv, 0, height - 1, "%d/%d  key=%c (%d) fps=%f (%d)", width, height, key, key, frameRate,duration);
         caca_refresh_display(pt.dp);
-        //if (PT_USE_DITHERING)  caca_free_dither(PT_dither);
 
     }
+    if (pt.PT_USE_DITHERING)  caca_free_dither(pt.PT_dither);
     caca_free_display(pt.dp);
     caca_free_canvas(pt.cv);
+    closeKeyboard();
 }
 
 
 int init() {
-    initialiseEpoch () ;
+    initMillis () ;
+    initKeyboard();
+
+    pthread_t k_t;
+    pthread_create(&k_t, NULL, &keyboard_thread, NULL);
 
     printf("init ");
     sprintf(pt.density, " .',-+:;=o&%%/$*W@#");
@@ -109,14 +108,15 @@ int init() {
 
     pt.C_color = 0;
     pt.C_pixel = '.';
-    pt.PT_running = 1;
+    pt.running = 1;
     pt.PT_paused = 0;
     pt.PT_keyblocked = 0;
 
-    pt.PT_USE_DITHERING = 1;
+ 
 
     pt.PT_bitmap_width  = 120;
     pt.PT_bitmap_height = 80;
+
     ellipseMode(CENTER);
     pt.cv = caca_create_canvas(0, 0);
     if (!pt.cv) {
@@ -137,6 +137,7 @@ int init() {
         height = pt.PT_bitmap_height;
 
     }
+   // caca_set_display_time(pt.dp,40000);
     useDithering();
     stroke(255);
     setDitherResolution(caca_get_canvas_width(pt.cv), caca_get_canvas_height(pt.cv));
@@ -145,6 +146,8 @@ int init() {
 
     return 0;
 }
+
+
 
 
 color_pt color(int r, int g, int b) {
@@ -528,16 +531,44 @@ color_pt lerpColor(color_pt c1, color_pt c2, float amt, int mode) {
 unsigned int millis (void) {
     struct timeval tv ;
     uint64_t now ;
-
     gettimeofday (&tv, NULL) ;
     now  = (uint64_t)tv.tv_sec * (uint64_t)1000 + (uint64_t)(tv.tv_usec / 1000) ;
-
-    return (uint32_t)(now - epochMilli) ;
+    return (uint32_t)(now - pt_epochMilli) ;
 }
-static void initialiseEpoch (void) {
+
+static void initMillis(void) {
     struct timeval tv ;
-
     gettimeofday (&tv, NULL) ;
-    epochMilli = (uint64_t)tv.tv_sec * (uint64_t)1000    + (uint64_t)(tv.tv_usec / 1000) ;
-    epochMicro = (uint64_t)tv.tv_sec * (uint64_t)1000000 + (uint64_t)(tv.tv_usec) ;
+    pt_epochMilli = (uint64_t)tv.tv_sec * (uint64_t)1000    + (uint64_t)(tv.tv_usec / 1000) ;
+    pt_epochMicro = (uint64_t)tv.tv_sec * (uint64_t)1000000 + (uint64_t)(tv.tv_usec) ;
 }
+
+void initKeyboard() {
+    tcgetattr(0, &initial_settings);
+    new_settings = initial_settings;
+    new_settings.c_lflag &= ~ICANON;
+    new_settings.c_lflag &= ~ECHO;
+    new_settings.c_lflag &= ~ISIG;
+    new_settings.c_cc[VMIN] = 1;
+    new_settings.c_cc[VTIME] = 0;
+    tcsetattr(0, TCSANOW, &new_settings);
+    key = ' ';
+}
+
+void closeKeyboard() {
+    tcsetattr(0, TCSANOW, &initial_settings);
+}
+
+
+int readch() {
+    char ch;
+
+    if (peek_character != -1) {
+        ch = peek_character;
+        peek_character = -1;
+        return ch;
+    }
+    read(0, &ch, 1);
+    return ch;
+}
+

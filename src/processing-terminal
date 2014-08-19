@@ -60,13 +60,13 @@ sub build() {
     copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.h", $build_path );
     copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.c", $build_path );
     my $build_command
-        = "g++ -Wall  -Wunused-but-set-variable -g -v"
+        = "g++ -Wall  -Wunused-but-set-variable -g "
         . " -o build/"
         . $base_name
         . " build/processing-terminal.c"
         . " build/"
         . $base_name . ".c"
-        . " -Wall -lcaca -Wunused-but-set-variable";
+        . " -Wall -lcaca -lpthread -Wunused-but-set-variable";
     print $build_command. "\n";
     system($build_command );
     system( "build/" . $base_name );

@@ -11,5 +11,4 @@ Perl
 GNU C++ Compiler
 
 ## Installation
-get the repository
-sudo apt-get install libcaca libcaca-dev perl 
+sudo apt-get install libfile-slurp-perl libcaca0 libcaca-dev
