@@ -2,18 +2,18 @@
 
 #    Copyright (c) 2014 by Ralf Baecker <rlfbckr ~AT~ gmail.com>
 #
-#    This file is part of Processing-Terminal.
+#    This file is part of p5terminal.
 #
 #    A wrapper around libcaca and ncurses to offer an ascii-art version to
 #    the processing language
 #
-#    Processing-Terminal is distributed in the hope that it will be
+#    p5terminal is distributed in the hope that it will be
 #    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with Processing-Terminal.  If not, see
+#    along with p5terminal.  If not, see
 #    <http://www.gnu.org/licenses/>. 
 
 
@@ -33,7 +33,7 @@ my $base_name    = get_base_name($pde_file);
 my $current_path = get_current_path();
 my $build_path   = get_build_dir($current_path);
 
-print("processing-terminal\n");
+print("p5terminal\n");
 print("  pde_file       $pde_file\n");
 print("  base_name      $base_name\n");
 print("  current_path   $current_path\n");
@@ -58,13 +58,13 @@ sub build() {
     if ( -e $build_path . "/" . $base_name ) {
         system( "rm " . $build_path . "/" . $base_name );
     }
-    copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.h", $build_path );
-    copy( $PROCESSING_TERMINAL_DIR . "/processing-terminal.c", $build_path );
+    copy( $PROCESSING_TERMINAL_DIR . "/p5terminal.h", $build_path );
+    copy( $PROCESSING_TERMINAL_DIR . "/p5terminal.c", $build_path );
     my $build_command
         = "g++ -Wall  -Wunused-but-set-variable -g "
         . " -o build/"
         . $base_name
-        . " build/processing-terminal.c"
+        . " build/p5terminal.c"
         . " build/"
         . $base_name . ".c"
         . " -Wall -lcaca -lpthread -Wunused-but-set-variable";
@@ -72,17 +72,6 @@ sub build() {
     system($build_command );
     system( "build/" . $base_name );
     system("stty sane");
-
-#
-# avr-g++ -c -g -Os -Wall -fno-exceptions -ffunction-sections -fdata-sections -mmcu=atmega328p -DF_CPU=16000000L -MMD -DUSB_VID=null -DUSB_PID=null -DARDUINO=105 -D__PROG_TYPES_COMPAT__ -I/usr/share/arduino/hardware/arduino/cores/arduino -I/usr/share/arduino/hardware/arduino/variants/standard /tmp/build2610015216406659339.tmp/sketch_aug15a.cpp -o /tmp/build2610015216406659339.tmp/sketch_aug15a.cpp.o
-#
-#
-#    system(   "g++  build/"
-#            . $base_name
-#            . ".c -o build/"
-#            . $base_name
-#            . " -lcaca -lpthread -Wall -Wunused-but-set-variable" );
-
 }
 
 sub gen_c_code() {

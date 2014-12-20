@@ -1,4 +1,4 @@
-#include "processing-terminal.h"
+#include "p5terminal.h"
 
 /*
     Copyright (c) 2014 by Ralf Baecker <rlfbckr ~AT~ gmail.com>
@@ -72,16 +72,12 @@ void processing_terminal() {
                                caca_get_canvas_height(pt.cv), pt.PT_dither, pt.PT_buffer);
         }
         render_text_items();
-        /*
-        last_frame_millis = this_frame_millis;
-        this_frame_millis = millis();
-        long duration =  (this_frame_millis - last_frame_millis);
-        */
+
         int duration = caca_get_display_time(pt.dp);
         if (duration > 0) {
             frameRate = (frameRate * 0.9) + ((1000000 / duration) * 0.1); //(1000 / duration);
         }
-        caca_printf(pt.cv, 0, height - 1, "%d/%d  key=%c (%d) fps=%f (%d)", width, height, key, key, frameRate,duration);
+        caca_printf(pt.cv, 0, caca_get_canvas_height(pt.cv) - 1, "%d/%d  key=%c (%d) fps=%f (%d)", width, height, key, key, frameRate,duration);
         caca_refresh_display(pt.dp);
 
     }

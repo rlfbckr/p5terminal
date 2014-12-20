@@ -1,4 +1,4 @@
-#include "processing-terminal.h"
+#include "p5terminal.h"
 /*
     Copyright (c) 2014 by Ralf Baecker <rlfbckr ~AT~ gmail.com>
 
