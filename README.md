@@ -18,11 +18,11 @@ Installing requirements on Ubuntu/Debian:
 ###Installation
 Get Processing-Terminal from Github
 
-    git clone https://github.com/rlfbckr/processing-terminal
+    git clone https://github.com/rlfbckr/p5terminal
 
 Add processing-terminal to your PATH or add an alias in **.bashrc**
 
-    alias processing-terminal="/path/to/processing-terminal/src"      
+    alias p5terminal="/path/to/processing-terminal/src/p5terminal"      
    
 
 ### How it works
@@ -51,4 +51,4 @@ The Perl-Script **processing-terminal** does the following:
 
 An example build command looks like this
 
-    g++ -Wall -g  -o build/demo build/processing-terminal.c build/demo.c -Wall -lcaca -lpthread
+    g++ -Wall -g  -o build/demo build/p5terminal.c build/demo.c -Wall -lcaca -lpthread
